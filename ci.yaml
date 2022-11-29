@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  schedule:
+    - cron: '0 12-22 * * 1-5' ## Execute every 1 hour, from 12:00 to 22:00 (UTC), from Monday through Friday.
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: [ self-hosted, linux, vpn, selenium ]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install --user -r requirements.txt
+
+      - name: Run Tests
+        env:
+          FRONT_MICRO: 'https://www.grocerycrud.com/v1.x/demo/my_boss_is_in_a_hurry/bootstrap'
+          SELENIUM_URL: http://moon.moon.svc.cluster.local:4444/wd/hub
+        run: |
+              sicreditest.py
+              
+      - name: Selenium Tests Report
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: Tests Report
+          path: test-reports/*.xml
+          reporter: java-junit
+
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: Screenshots
+          if-no-files-found: warn
+          path: |
+            test-reports/**/*.png
