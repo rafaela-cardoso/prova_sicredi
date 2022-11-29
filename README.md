@@ -4,6 +4,7 @@
  - Selenium
  - Python
  - Chrome driver
+ 
  Alterar no arquivo .env 
  - CI para "false"
  - WEBDRIVE_PATH com o caminho onde está o chromedriver.exe
